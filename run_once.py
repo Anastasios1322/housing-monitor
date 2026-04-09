@@ -92,7 +92,7 @@ def main():
             "scraper":     "roommatch",
             "url":         "https://www.roommatch.nl/en/offerings/to-rent",
             "filter_city": ["amsterdam"],
-        }
+        },
         {
             "name":        "Roofz Amsterdam",
             "scraper":     "roofz",
