@@ -93,6 +93,12 @@ def main():
             "url":         "https://www.roommatch.nl/en/offerings/to-rent",
             "filter_city": ["amsterdam"],
         }
+        {
+            "name":        "Roofz Amsterdam",
+            "scraper":     "roofz",
+            "url":         "https://www.roofz.eu/huur/woningen",
+            "filter_city": ["amsterdam"],
+        },
     ]
 
     seen = load_seen()
