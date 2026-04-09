@@ -126,9 +126,57 @@ def scrape_generic(site_cfg: dict) -> list:
             log.debug(f"  Card parse error: {e}")
 
     return listings
+def scrape_roofz(site_cfg: dict) -> list:
+    api_url = "https://www.roofz.eu/api/ms/listing/properties"
+    filter_city = [c.lower() for c in site_cfg.get("filter_city", [])]
+    listings = []
 
+    try:
+        log.info("  Calling Roofz API ...")
+        params = {
+            "perPage": 50,
+            "page": 1,
+            "sort": "stage",
+            "filter[stage]": "available",
+            "filter[import_type]": "RentResident",
+        }
+        resp = SESSION.get(api_url, params=params, timeout=20)
+        resp.raise_for_status()
+        data = resp.json()
+        items = data.get("data", [])
+        log.info(f"  API returned {len(items)} item(s)")
+
+        for item in items:
+            try:
+                title    = item.get("title", "")
+                slug     = item.get("slug", "")
+                url      = f"https://www.roofz.eu/huur/woningen/{slug}" if slug else site_cfg["url"]
+                address  = item.get("address", {})
+                city     = address.get("location", "")
+                street   = address.get("street", "")
+                housenr  = address.get("house_number", "")
+                handover = item.get("handover", {})
+                price    = handover.get("price_formatted", "")
+                text_to_check = (title + " " + city).lower()
+                if filter_city and not any(c in text_to_check for c in filter_city):
+                    continue
+                listings.append({
+                    "id": str(item.get("id", url)),
+                    "title": title or f"{street} {housenr}".strip(),
+                    "price": price,
+                    "location": city,
+                    "url": url,
+                })
+            except Exception as e:
+                log.debug(f"  Item parse error: {e}")
+
+    except Exception as e:
+        log.error(f"  Roofz API call failed: {e}")
+
+    return listings
 
 SCRAPERS = {
     "roommatch": scrape_roommatch,
     "generic":   scrape_generic,
+    "roofz":     scrape_roofz,
 }
