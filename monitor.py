@@ -172,7 +172,7 @@
 Housing Monitor — checks listing sites every N minutes and sends Telegram notifications.
 """
 import os
-os.environ["TZ"] = "Europe/Amsterdam"
+
 import time
 import json
 import logging
@@ -183,6 +183,10 @@ from datetime import datetime
 
 from config import CONFIG
 from scrapers import SCRAPERS
+
+os.environ["TZ"] = "Europe/Amsterdam"
+time.tzset()
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -209,21 +213,23 @@ def save_seen(seen: set):
     STATE_FILE.write_text(json.dumps(list(seen)), encoding="utf-8")
 
 def send_notification(new_listings: list):
-    token   = "8614985590:AAH_ilJn8jCSIWy2KStnE9cgCmStWa5Ed_0"
-    chat_id = "8032104558"
+    token    = "8614985590:AAH_ilJn8jCSIWy2KStnE9cgCmStWa5Ed_0"
+    chat_ids = ["8032104558", "5177744933"]
 
     for l in new_listings:
         msg  = f"🏠 New listing!\n{l['title']}\n{l.get('price', '')}\n{l['url']}"
-        data = json.dumps({"chat_id": chat_id, "text": msg}).encode()
-        req  = urllib.request.Request(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            data=data,
-            headers={"Content-Type": "application/json"}
-        )
-        try:
-            urllib.request.urlopen(req)
-        except Exception as e:
-            log.error(f"Telegram failed: {e}")
+        data_base = {"text": msg}
+        for chat_id in chat_ids:
+            data = json.dumps({**data_base, "chat_id": chat_id}).encode()
+            req  = urllib.request.Request(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                data=data,
+                headers={"Content-Type": "application/json"}
+            )
+            try:
+                urllib.request.urlopen(req)
+            except Exception as e:
+                log.error(f"Telegram failed for {chat_id}: {e}")
 
     log.info(f"Telegram sent — {len(new_listings)} listing(s)")
 
