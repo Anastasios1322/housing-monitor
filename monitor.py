@@ -180,14 +180,11 @@ import schedule
 import urllib.request
 from pathlib import Path
 from datetime import datetime
-
 from config import CONFIG
 from scrapers import SCRAPERS
 
 os.environ["TZ"] = "Europe/Amsterdam"
 time.tzset()
-
-
 
 logging.basicConfig(
     level=logging.INFO,
@@ -216,7 +213,6 @@ def save_seen(seen: set):
 def send_notification(new_listings: list):
     token    = "8614985590:AAH_ilJn8jCSIWy2KStnE9cgCmStWa5Ed_0"
     chat_ids = ["8032104558", "5177744933"]
-
     for l in new_listings:
         msg  = f"🏠 New listing!\n{l['title']}\n{l.get('price', '')}\n{l['url']}"
         data_base = {"text": msg}
@@ -231,10 +227,14 @@ def send_notification(new_listings: list):
                 urllib.request.urlopen(req)
             except Exception as e:
                 log.error(f"Telegram failed for {chat_id}: {e}")
-
     log.info(f"Telegram sent — {len(new_listings)} listing(s)")
 
 def check_all_sites():
+    hour = datetime.now().hour
+    if hour < 7 or hour >= 23:
+        log.info("Night time — skipping check")
+        return
+
     log.info("── Checking all sites ──────────────────────────")
     seen         = load_seen()
     new_listings = []
@@ -242,19 +242,15 @@ def check_all_sites():
     for site_cfg in CONFIG["sites"]:
         if not site_cfg.get("enabled", True):
             continue
-
         scraper_name = site_cfg["scraper"]
         scraper_fn   = SCRAPERS.get(scraper_name)
-
         if not scraper_fn:
             log.warning(f"No scraper found for '{scraper_name}' — skipping")
             continue
-
         log.info(f"Checking {site_cfg['name']} …")
         try:
             listings = scraper_fn(site_cfg)
             log.info(f"  Found {len(listings)} total listing(s)")
-
             for listing in listings:
                 uid = listing.get("id") or listing["url"]
                 if uid not in seen:
@@ -262,7 +258,6 @@ def check_all_sites():
                     listing["source"] = site_cfg["name"]
                     new_listings.append(listing)
                     log.info(f"  NEW: {listing['title']}")
-
         except Exception as e:
             log.error(f"  Error scraping {site_cfg['name']}: {e}")
 
@@ -274,8 +269,6 @@ def check_all_sites():
     else:
         log.info("No new listings found.")
 
-    log.info(f"Next check in {CONFIG['interval_minutes']} minutes\n")
-
 if __name__ == "__main__":
     log.info("Housing monitor started")
     log.info(f"Sites    : {[s['name'] for s in CONFIG['sites'] if s.get('enabled', True)]}")
@@ -285,7 +278,7 @@ if __name__ == "__main__":
 
     def reschedule():
         schedule.clear()
-        next_interval = random.randint(6, 15)
+        next_interval = random.randint(4, 7)
         log.info(f"Next check in {next_interval} minutes")
         schedule.every(next_interval).minutes.do(lambda: (check_all_sites(), reschedule()))
 
