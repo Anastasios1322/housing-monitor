@@ -172,7 +172,7 @@
 Housing Monitor — checks listing sites every N minutes and sends Telegram notifications.
 """
 import os
-
+import random
 import time
 import json
 import logging
@@ -186,6 +186,7 @@ from scrapers import SCRAPERS
 
 os.environ["TZ"] = "Europe/Amsterdam"
 time.tzset()
+
 
 
 logging.basicConfig(
@@ -278,11 +279,17 @@ def check_all_sites():
 if __name__ == "__main__":
     log.info("Housing monitor started")
     log.info(f"Sites    : {[s['name'] for s in CONFIG['sites'] if s.get('enabled', True)]}")
-    log.info(f"Interval : every {CONFIG['interval_minutes']} minutes")
     log.info("")
 
     check_all_sites()
-    schedule.every(CONFIG["interval_minutes"]).minutes.do(check_all_sites)
+
+    def reschedule():
+        schedule.clear()
+        next_interval = random.randint(6, 15)
+        log.info(f"Next check in {next_interval} minutes")
+        schedule.every(next_interval).minutes.do(lambda: (check_all_sites(), reschedule()))
+
+    reschedule()
 
     while True:
         schedule.run_pending()
