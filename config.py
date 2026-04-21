@@ -74,15 +74,6 @@ CONFIG = {
             "url":         "https://www.roofz.eu/huur/woningen",
             "enabled":     True,
             "filter_city": ["amsterdam"],
-        },
-        {
-            "name":        "Roommatch Amsterdam",
-            "scraper":     "roommatch",
-            "url":         "https://www.roommatch.nl/en/offerings/to-rent",
-            "enabled":     False,
-            "username":    "anastasisgoudras@gmail.com",
-            "password":    "Panatha13221!",
-            "filter_city": ["amsterdam"],
-        },
+        }
     ],
 }
