@@ -62,13 +62,11 @@
 
 CONFIG = {
     "interval_minutes": 5,
-
     "email": {
         "sender":       "anastasisgoudras@gmail.com",
         "recipient":    "anastasisgoudras@gmail.com",
         "app_password": "kfxdjhpmhnngloic",
     },
-
     "sites": [
         {
             "name":        "Roofz Amsterdam",
@@ -81,7 +79,7 @@ CONFIG = {
             "name":        "Roommatch Amsterdam",
             "scraper":     "roommatch",
             "url":         "https://www.roommatch.nl/en/offerings/to-rent",
-            "enabled":     True,
+            "enabled":     False,
             "username":    "anastasisgoudras@gmail.com",
             "password":    "Panatha13221!",
             "filter_city": ["amsterdam"],
