@@ -171,7 +171,8 @@
 """
 Housing Monitor — checks listing sites every N minutes and sends Telegram notifications.
 """
-
+import os
+os.environ["TZ"] = "Europe/Amsterdam"
 import time
 import json
 import logging
