@@ -4,6 +4,8 @@ Scrapers for each housing site.
 
 import logging
 import requests
+import random
+import time
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +34,6 @@ def scrape_roommatch(site_cfg: dict) -> list:
         resp.raise_for_status()
         data = resp.json()
 
-        # Find the list in response
         items = []
         if isinstance(data, list):
             items = data
@@ -46,10 +47,9 @@ def scrape_roommatch(site_cfg: dict) -> list:
 
         for item in items:
             try:
-                # Build title from address
-                street   = item.get("street", "")
-                housenr  = item.get("houseNumber", "")
-                city     = ""
+                street  = item.get("street", "")
+                housenr = item.get("houseNumber", "")
+                city    = ""
                 if isinstance(item.get("city"), dict):
                     city = item["city"].get("name", "")
                 elif isinstance(item.get("municipality"), dict):
@@ -61,12 +61,10 @@ def scrape_roommatch(site_cfg: dict) -> list:
                 if not title:
                     title = "Room listing"
 
-                # Price
                 prijs = (item.get("totalePrijs") or item.get("huurprijs") or
                          item.get("prijs") or item.get("price") or "")
                 price = f"€{prijs}" if prijs else ""
 
-                # ID and URL
                 item_id = str(item.get("Id") or item.get("id") or item.get("advertentieId") or "")
                 url = f"https://www.roommatch.nl/en/offerings/to-rent/{item_id}" if item_id else site_cfg["url"]
 
@@ -126,10 +124,13 @@ def scrape_generic(site_cfg: dict) -> list:
             log.debug(f"  Card parse error: {e}")
 
     return listings
+
+
 def scrape_roofz(site_cfg: dict) -> list:
-    api_url = "https://www.roofz.eu/api/ms/listing/properties"
+    time.sleep(random.uniform(1, 2))
+    api_url     = "https://www.roofz.eu/api/ms/listing/properties"
     filter_city = [c.lower() for c in site_cfg.get("filter_city", [])]
-    listings = []
+    listings    = []
 
     try:
         log.info("  Calling Roofz API ...")
@@ -142,7 +143,7 @@ def scrape_roofz(site_cfg: dict) -> list:
         }
         resp = SESSION.get(api_url, params=params, timeout=20)
         resp.raise_for_status()
-        data = resp.json()
+        data  = resp.json()
         items = data.get("data", [])
         log.info(f"  API returned {len(items)} item(s)")
 
@@ -174,6 +175,7 @@ def scrape_roofz(site_cfg: dict) -> list:
         log.error(f"  Roofz API call failed: {e}")
 
     return listings
+
 
 SCRAPERS = {
     "roommatch": scrape_roommatch,
