@@ -228,7 +228,51 @@ def send_notification(new_listings: list):
             except Exception as e:
                 log.error(f"Telegram failed for {chat_id}: {e}")
     log.info(f"Telegram sent — {len(new_listings)} listing(s)")
+def submit_roofz_interest(listing: dict):
+    import urllib.request, json as _json
+    property_id = listing.get("id", "")
+    try:
+        property_id = int(property_id)
+    except (ValueError, TypeError):
+        log.warning(f"  Roofz interest: invalid property_id '{property_id}' — skipping")
+        return
 
+    payload = _json.dumps({
+        "candidate": {
+            "email": "anastasisgoudras@gmail.com"
+        },
+        "subscription": {
+            "firstname": "Anastasios",
+            "lastname": "Goudras",
+            "phone": "0645590016",
+            "property_id": property_id,
+            "comment": "Hi, My name is Anastasios, I'm 24 and originally from Greece, currently living in the Netherlands. I work at Picnic as a Manager, a role I was promoted to within three months. My fiancée is also Greek, has been in Amsterdam for four years, and works as a Project Manager. We're an engaged couple looking for a place we can genuinely settle into long-term. We're quiet, responsible tenants, no smoking, no pets. We can provide a landlord recommendation, employer's statement, payslips, and bank statements on request. I also have a guarantor ready with all supporting documents. As students, we each receive €1000 in student benefits, visible in our bank statements. We're very interested in this apartment and are ready to complete the full application quickly. If needed, we can also provide up to six months' rent in advance. Kind regards, Anastasios",
+            "metadata": {
+                "_ts": int(time.time() * 1000)
+            }
+        }
+    }).encode()
+
+    req = urllib.request.Request(
+        "https://www.roofz.eu/api/ms/subscription/candidate",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Referer": listing.get("url", "https://www.roofz.eu/huur/woningen"),
+        }
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            status = resp.status
+            log.info(f"  Roofz interest submitted for property {property_id} — HTTP {status}")
+    except urllib.error.HTTPError as e:
+        if e.code == 409:
+            log.info(f"  Roofz interest already submitted for property {property_id} (409)")
+        else:
+            log.error(f"  Roofz interest failed for property {property_id}: HTTP {e.code}")
+    except Exception as e:
+        log.error(f"  Roofz interest failed for property {property_id}: {e}")
 def check_all_sites():
     hour = datetime.now().hour
     if hour < 7 or hour >= 23:
@@ -258,6 +302,8 @@ def check_all_sites():
                     listing["source"] = site_cfg["name"]
                     new_listings.append(listing)
                     log.info(f"  NEW: {listing['title']}")
+                    if scraper_name == "roofz":
+                        submit_roofz_interest(listing)
         except Exception as e:
             log.error(f"  Error scraping {site_cfg['name']}: {e}")
 
