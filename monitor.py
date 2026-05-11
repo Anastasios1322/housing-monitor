@@ -324,7 +324,7 @@ if __name__ == "__main__":
 
     def reschedule():
         schedule.clear()
-        next_interval = random.randint(4, 7)
+        next_interval = random.randint(2, 5)
         log.info(f"Next check in {next_interval} minutes")
         schedule.every(next_interval).minutes.do(lambda: (check_all_sites(), reschedule()))
 
