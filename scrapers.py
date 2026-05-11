@@ -205,6 +205,7 @@ def scrape_plaza(site_cfg: dict) -> list:
                 if not isinstance(item, dict):
                     continue
  
+                # City field is often empty — fall back to urlKey which contains the city
                 city = ""
                 if isinstance(item.get("city"), dict):
                     city = item["city"].get("name", "")
@@ -213,7 +214,9 @@ def scrape_plaza(site_cfg: dict) -> list:
                 if not city:
                     city = item.get("gemeenteGeoLocatieNaam", "")
  
-                if filter_city and not any(c in city.lower() for c in filter_city):
+                url_key = item.get("urlKey", "")
+                text_to_check = (city + " " + url_key).lower()
+                if filter_city and not any(c in text_to_check for c in filter_city):
                     continue
  
                 item_id  = str(item.get("id") or item.get("ID") or "")
@@ -229,7 +232,6 @@ def scrape_plaza(site_cfg: dict) -> list:
                 price_raw = item.get("totalRent") or item.get("netRent") or ""
                 price     = f"€{price_raw}" if price_raw else ""
  
-                url_key = item.get("urlKey", "")
                 url = (
                     f"https://plaza.newnewnew.space/en/availables-places/living-place/details/{url_key}"
                     if url_key else site_cfg["url"]
