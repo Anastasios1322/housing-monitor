@@ -176,9 +176,118 @@ def scrape_roofz(site_cfg: dict) -> list:
 
     return listings
 
+def scrape_plaza(site_cfg: dict) -> list:
+    time.sleep(random.uniform(1, 2))
+    api_url     = "https://plaza.newnewnew.space/portal/object/frontend/getreagerendata/format/json"
+    filter_city = [c.lower() for c in site_cfg.get("filter_city", [])]
+    listings    = []
+ 
+    try:
+        log.info("  Calling Plaza API ...")
+        headers = {
+            "Accept":  "application/json",
+            "Referer": "https://plaza.newnewnew.space/aanbod/wonen",
+            "Origin":  "https://plaza.newnewnew.space",
+        }
+        resp = SESSION.get(api_url, headers=headers, timeout=20)
+        resp.raise_for_status()
+        data = resp.json()
+ 
+        # Log top-level keys on first run so we can verify the shape
+        if isinstance(data, dict):
+            log.info(f"  Plaza response keys: {list(data.keys())}")
+ 
+        items = []
+        if isinstance(data, list):
+            items = data
+        elif isinstance(data, dict):
+            for key in ["data", "items", "results", "objects", "woningen", "aanbod"]:
+                if key in data and isinstance(data[key], list):
+                    items = data[key]
+                    log.info(f"  Found listings under key '{key}'")
+                    break
+            if not items:
+                candidates = [v for v in data.values() if isinstance(v, list)]
+                if candidates:
+                    items = candidates[0]
+ 
+        log.info(f"  API returned {len(items)} item(s)")
+ 
+        for item in items:
+            try:
+                if not isinstance(item, dict):
+                    continue
+ 
+                item_id = str(
+                    item.get("id") or item.get("Id") or
+                    item.get("objectId") or item.get("object_id") or ""
+                )
+ 
+                street  = (
+                    item.get("street") or item.get("straat") or
+                    item.get("adres") or item.get("address") or
+                    item.get("title") or item.get("naam") or ""
+                )
+                housenr = str(item.get("houseNumber") or item.get("huisnummer") or "")
+                title   = f"{street} {housenr}".strip() if housenr else street
+                if not title:
+                    title = "Plaza listing"
+ 
+                city_raw = (
+                    item.get("city") or item.get("stad") or
+                    item.get("plaats") or item.get("gemeente") or ""
+                )
+                city = (
+                    city_raw.get("name") or city_raw.get("naam") or ""
+                    if isinstance(city_raw, dict) else str(city_raw)
+                )
+ 
+                # Filter by city the same way Roofz does
+                text_to_check = (title + " " + city).lower()
+                if filter_city and not any(c in text_to_check for c in filter_city):
+                    continue
+ 
+                price_raw = (
+                    item.get("price") or item.get("prijs") or
+                    item.get("huurprijs") or item.get("rent") or
+                    item.get("totalRent") or ""
+                )
+                price = (
+                    f"€{price_raw}"
+                    if price_raw and not str(price_raw).startswith("€")
+                    else str(price_raw)
+                )
+ 
+                slug = item.get("slug") or item.get("url") or item.get("path") or ""
+                if slug and slug.startswith("http"):
+                    url = slug
+                elif slug:
+                    url = f"https://plaza.newnewnew.space/aanbod/wonen/{slug.lstrip('/')}"
+                elif item_id:
+                    url = f"https://plaza.newnewnew.space/aanbod/wonen/{item_id}"
+                else:
+                    url = site_cfg["url"]
+ 
+                listings.append({
+                    "id":       item_id or url,
+                    "title":    title,
+                    "price":    price,
+                    "location": city,
+                    "url":      url,
+                })
+ 
+            except Exception as e:
+                log.debug(f"  Item parse error: {e}")
+ 
+    except Exception as e:
+        log.error(f"  Plaza API call failed: {e}")
+ 
+    return listings
+
 
 SCRAPERS = {
     "roommatch": scrape_roommatch,
     "generic":   scrape_generic,
     "roofz":     scrape_roofz,
+    "plaza":     scrape_plaza,   # ← add this
 }
