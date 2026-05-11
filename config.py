@@ -74,6 +74,18 @@ CONFIG = {
             "url":         "https://www.roofz.eu/huur/woningen",
             "enabled":     True,
             "filter_city": ["amsterdam"],
-        }
+        },
+
+        {
+            "name":    "Plaza Amsterdam",
+            "scraper": "plaza",
+            "url":     "https://plaza.newnewnew.space/aanbod/wonen#?gesorteerd-op=zoekprofiel",
+            "enabled": True,
+            # City filtering is handled via the hardcoded Amsterdam object IDs in the scraper.
+            # No filter_city needed here, but leaving it for consistency.
+            "filter_city": ["amsterdam"],
+        },
     ],
 }
+
+
