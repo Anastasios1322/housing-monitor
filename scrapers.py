@@ -178,39 +178,26 @@ def scrape_roofz(site_cfg: dict) -> list:
 
 def scrape_plaza(site_cfg: dict) -> list:
     time.sleep(random.uniform(1, 2))
-    api_url     = "https://plaza.newnewnew.space/portal/object/frontend/getreagerendata/format/json"
+    api_url     = "https://mosaic-plaza-aanbodapi.zig365.nl/api/v1/actueel-aanbod"
     filter_city = [c.lower() for c in site_cfg.get("filter_city", [])]
     listings    = []
  
     try:
         log.info("  Calling Plaza API ...")
-        headers = {
-            "Accept":  "application/json",
-            "Referer": "https://plaza.newnewnew.space/aanbod/wonen",
-            "Origin":  "https://plaza.newnewnew.space",
+        params = {
+            "limit":  50,
+            "locale": "nl_NL",
+            "page":   0,
+            "sort":   "%2BreactionData.aangepasteTotaleHuurprijs",
         }
-        resp = SESSION.get(api_url, headers=headers, timeout=20)
+        payload = {
+            "filters":        {},
+            "hidden-filters": {}
+        }
+        resp = SESSION.post(api_url, params=params, json=payload, timeout=20)
         resp.raise_for_status()
-        data = resp.json()
- 
-        # Log top-level keys on first run so we can verify the shape
-        if isinstance(data, dict):
-            log.info(f"  Plaza response keys: {list(data.keys())}")
- 
-        items = []
-        if isinstance(data, list):
-            items = data
-        elif isinstance(data, dict):
-            for key in ["data", "items", "results", "objects", "woningen", "aanbod"]:
-                if key in data and isinstance(data[key], list):
-                    items = data[key]
-                    log.info(f"  Found listings under key '{key}'")
-                    break
-            if not items:
-                candidates = [v for v in data.values() if isinstance(v, list)]
-                if candidates:
-                    items = candidates[0]
- 
+        data  = resp.json()
+        items = data.get("data", []) if isinstance(data, dict) else data
         log.info(f"  API returned {len(items)} item(s)")
  
         for item in items:
@@ -218,55 +205,36 @@ def scrape_plaza(site_cfg: dict) -> list:
                 if not isinstance(item, dict):
                     continue
  
-                item_id = str(
-                    item.get("id") or item.get("Id") or
-                    item.get("objectId") or item.get("object_id") or ""
-                )
+                # City is a nested object: {"id": ..., "name": "Amsterdam"}
+                city = ""
+                if isinstance(item.get("city"), dict):
+                    city = item["city"].get("name", "")
+                elif isinstance(item.get("municipality"), dict):
+                    city = item["municipality"].get("name", "")
+                if not city:
+                    city = item.get("gemeenteGeoLocatieNaam", "")
  
-                street  = (
-                    item.get("street") or item.get("straat") or
-                    item.get("adres") or item.get("address") or
-                    item.get("title") or item.get("naam") or ""
-                )
-                housenr = str(item.get("houseNumber") or item.get("huisnummer") or "")
-                title   = f"{street} {housenr}".strip() if housenr else street
+                # Filter by Amsterdam
+                if filter_city and not any(c in city.lower() for c in filter_city):
+                    continue
+ 
+                item_id  = str(item.get("id") or item.get("ID") or "")
+                street   = item.get("street", "")
+                housenr  = item.get("houseNumber", "")
+                addition = item.get("houseNumberAddition", "")
+                title    = f"{street} {housenr}".strip()
+                if addition:
+                    title += f" {addition}"
                 if not title:
                     title = "Plaza listing"
  
-                city_raw = (
-                    item.get("city") or item.get("stad") or
-                    item.get("plaats") or item.get("gemeente") or ""
-                )
-                city = (
-                    city_raw.get("name") or city_raw.get("naam") or ""
-                    if isinstance(city_raw, dict) else str(city_raw)
-                )
+                price_raw = item.get("totalRent") or item.get("netRent") or ""
+                price     = f"€{price_raw}" if price_raw else ""
  
-                # Filter by city the same way Roofz does
-                text_to_check = (title + " " + city).lower()
-                if filter_city and not any(c in text_to_check for c in filter_city):
-                    continue
- 
-                price_raw = (
-                    item.get("price") or item.get("prijs") or
-                    item.get("huurprijs") or item.get("rent") or
-                    item.get("totalRent") or ""
+                url = (
+                    f"https://plaza.newnewnew.space/aanbod/wonen?dwellingID={item_id}"
+                    if item_id else site_cfg["url"]
                 )
-                price = (
-                    f"€{price_raw}"
-                    if price_raw and not str(price_raw).startswith("€")
-                    else str(price_raw)
-                )
- 
-                slug = item.get("slug") or item.get("url") or item.get("path") or ""
-                if slug and slug.startswith("http"):
-                    url = slug
-                elif slug:
-                    url = f"https://plaza.newnewnew.space/aanbod/wonen/{slug.lstrip('/')}"
-                elif item_id:
-                    url = f"https://plaza.newnewnew.space/aanbod/wonen/{item_id}"
-                else:
-                    url = site_cfg["url"]
  
                 listings.append({
                     "id":       item_id or url,
