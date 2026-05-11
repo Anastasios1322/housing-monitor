@@ -84,7 +84,7 @@ CONFIG = {
             # City filtering is handled via the hardcoded Amsterdam object IDs in the scraper.
             # No filter_city needed here, but leaving it for consistency.
             "filter_city": ["amsterdam"],
-            "max_price": 1000,
+            
         },
     ],
 }
