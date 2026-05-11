@@ -231,9 +231,10 @@ def scrape_plaza(site_cfg: dict) -> list:
                 price_raw = item.get("totalRent") or item.get("netRent") or ""
                 price     = f"€{price_raw}" if price_raw else ""
  
+                url_key = item.get("urlKey", "")
                 url = (
-                    f"https://plaza.newnewnew.space/aanbod/wonen?dwellingID={item_id}"
-                    if item_id else site_cfg["url"]
+                    f"https://plaza.newnewnew.space/en/availables-places/living-place/details/{url_key}"
+                    if url_key else site_cfg["url"]
                 )
  
                 listings.append({
