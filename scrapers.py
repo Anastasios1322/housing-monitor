@@ -181,7 +181,7 @@ def scrape_plaza(site_cfg: dict) -> list:
     api_url     = "https://mosaic-plaza-aanbodapi.zig365.nl/api/v1/actueel-aanbod"
     filter_city = [c.lower() for c in site_cfg.get("filter_city", [])]
     listings    = []
- 
+
     try:
         log.info("  Calling Plaza API ...")
         params = {
@@ -199,12 +199,12 @@ def scrape_plaza(site_cfg: dict) -> list:
         data  = resp.json()
         items = data.get("data", []) if isinstance(data, dict) else data
         log.info(f"  API returned {len(items)} item(s)")
- 
+
         for item in items:
             try:
                 if not isinstance(item, dict):
                     continue
- 
+
                 # City is a nested object: {"id": ..., "name": "Amsterdam"}
                 city = ""
                 if isinstance(item.get("city"), dict):
@@ -213,11 +213,20 @@ def scrape_plaza(site_cfg: dict) -> list:
                     city = item["municipality"].get("name", "")
                 if not city:
                     city = item.get("gemeenteGeoLocatieNaam", "")
- 
+
                 # Filter by Amsterdam
                 if filter_city and not any(c in city.lower() for c in filter_city):
                     continue
- 
+
+                # Filter by max price
+                max_price = site_cfg.get("max_price")
+                if max_price:
+                    try:
+                        if float(item.get("totalRent") or 0) > max_price:
+                            continue
+                    except:
+                        pass
+
                 item_id  = str(item.get("id") or item.get("ID") or "")
                 street   = item.get("street", "")
                 housenr  = item.get("houseNumber", "")
@@ -227,16 +236,16 @@ def scrape_plaza(site_cfg: dict) -> list:
                     title += f" {addition}"
                 if not title:
                     title = "Plaza listing"
- 
+
                 price_raw = item.get("totalRent") or item.get("netRent") or ""
                 price     = f"€{price_raw}" if price_raw else ""
- 
+
                 url_key = item.get("urlKey", "")
                 url = (
                     f"https://plaza.newnewnew.space/en/availables-places/living-place/details/{url_key}"
                     if url_key else site_cfg["url"]
                 )
- 
+
                 listings.append({
                     "id":       item_id or url,
                     "title":    title,
@@ -244,13 +253,13 @@ def scrape_plaza(site_cfg: dict) -> list:
                     "location": city,
                     "url":      url,
                 })
- 
+
             except Exception as e:
                 log.debug(f"  Item parse error: {e}")
- 
+
     except Exception as e:
         log.error(f"  Plaza API call failed: {e}")
- 
+
     return listings
 
 
