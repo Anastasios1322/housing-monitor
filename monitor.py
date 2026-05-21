@@ -182,7 +182,7 @@ from pathlib import Path
 from datetime import datetime
 from config import CONFIG
 from scrapers import SCRAPERS
-
+# hey
 os.environ["TZ"] = "Europe/Amsterdam"
 time.tzset()
 
