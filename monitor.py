@@ -246,7 +246,14 @@ def submit_roofz_interest(listing: dict):
             "lastname": "Goudras",
             "phone": "0645590016",
             "property_id": property_id,
-            "message": "Hi, My name is Anastasios, I'm 24 and originally from Greece, currently living in the Netherlands. I work at Picnic as a Manager, a role I was promoted to within three months. My fiancée is also Greek, has been in Amsterdam for four years, and works as a Project Manager. We're an engaged couple looking for a place we can genuinely settle into long-term. We're quiet, responsible tenants, no smoking, no pets. We can provide a landlord recommendation, employer's statement, payslips, and bank statements on request. I also have a guarantor ready with all supporting documents. As students, we each receive €1000 in student benefits, visible in our bank statements. We're very interested in this apartment and are ready to complete the full application quickly. If needed, we can also provide up to six months' rent in advance. Kind regards, Anastasios",
+            "message": "Hi,
+My name is Anastasios, I’m 24 years old, originally from Greece, and currently living in the Netherlands. I work at Picnic as a Manager, a position I was promoted to within three months.
+I am looking for a place where I can settle long-term. I am engaged, and my fiancée, who is also Greek, has been living and working in Amsterdam for several years as a Project Manager. Stability and a comfortable home are therefore very important to me.
+I am a quiet and responsible tenant, non-smoker, with no pets. I can provide payslips, employer statements, bank statements, a landlord recommendation, and guarantor documents upon request. I also receive student benefits, visible in my bank statements.
+I am very interested in the apartment and ready to complete the application quickly. If needed, I can also pay several months of rent in advance.
+Kind regards,
+Anastasios
+",
             "metadata": {
                 "_ts": int(time.time() * 1000)
             }
