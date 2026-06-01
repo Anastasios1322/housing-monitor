@@ -246,14 +246,13 @@ def submit_roofz_interest(listing: dict):
             "lastname": "Goudras",
             "phone": "0645590016",
             "property_id": property_id,
-            "message": "Hi,
-My name is Anastasios, I’m 24 years old, originally from Greece, and currently living in the Netherlands. I work at Picnic as a Manager, a position I was promoted to within three months.
+            "message":  """Hi,
+My name is Anastasios, I'm 24 years old, originally from Greece, and currently living in the Netherlands. I work at Picnic as a Manager, a position I was promoted to within three months.
 I am looking for a place where I can settle long-term. I am engaged, and my fiancée, who is also Greek, has been living and working in Amsterdam for several years as a Project Manager. Stability and a comfortable home are therefore very important to me.
 I am a quiet and responsible tenant, non-smoker, with no pets. I can provide payslips, employer statements, bank statements, a landlord recommendation, and guarantor documents upon request. I also receive student benefits, visible in my bank statements.
 I am very interested in the apartment and ready to complete the application quickly. If needed, I can also pay several months of rent in advance.
 Kind regards,
-Anastasios
-",
+Anastasios""",
             "metadata": {
                 "_ts": int(time.time() * 1000)
             }
