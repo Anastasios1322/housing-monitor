@@ -93,7 +93,7 @@ CONFIG = {
             "url":              "https://www.pararius.com/apartments/amsterdam/900-1200",
             "enabled":          True,
             "filter_city":      ["amsterdam"],
-            "interval_minutes": 4,
+            "interval_minutes": 11,
         },
     ],
 }
