@@ -252,10 +252,67 @@ def scrape_plaza(site_cfg: dict) -> list:
         log.error(f"  Plaza API call failed: {e}")
  
     return listings
+    
+def scrape_pararius(site_cfg: dict) -> list: #start pararius +
+    import os
+    from bs4 import BeautifulSoup
 
+    time.sleep(random.uniform(1, 3))
+    url      = site_cfg["url"]
+    cookie   = os.environ.get("PARARIUS_COOKIE", "")   # set in Railway, not in code
+    listings = []
+
+    headers = {
+        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/124.0.0.0 Safari/537.36"),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,nl;q=0.8",
+        "Cookie": cookie,
+    }
+
+    try:
+        log.info("  Fetching Pararius ...")
+        resp = requests.get(url, headers=headers, timeout=20)
+        resp.raise_for_status()
+    except Exception as e:
+        log.error(f"  Pararius request failed: {e}")
+        return []
+
+    low = resp.text.lower()
+    if any(m in low for m in ("just a moment", "checking your browser", "captcha")):
+        log.error("  Pararius returned a bot-challenge page (need fresh cookie / curl_cffi)")
+        return []
+
+    soup  = BeautifulSoup(resp.text, "html.parser")
+    cards = soup.select("section.listing-search-item")
+    log.info(f"  Found {len(cards)} card(s)")
+
+    for card in cards:
+        try:
+            link = card.select_one("a.listing-search-item__link--title")
+            if not link or not link.get("href"):
+                continue
+            href     = link["href"].split("?")[0].rstrip("/")
+            full_url = href if href.startswith("http") else "https://www.pararius.com" + href
+            price_el = card.select_one(".listing-search-item__price")
+            sub_el   = card.select_one(".listing-search-item__sub-title")
+            listings.append({
+                "id":       href,
+                "title":    link.get_text(strip=True),
+                "price":    price_el.get_text(strip=True) if price_el else "",
+                "location": sub_el.get_text(strip=True) if sub_el else "",
+                "url":      full_url,
+            })
+        except Exception as e:
+            log.debug(f"  Card parse error: {e}")
+
+    return listings
+    
 SCRAPERS = {
     "roommatch": scrape_roommatch,
     "generic":   scrape_generic,
     "roofz":     scrape_roofz,
-    "plaza":     scrape_plaza,   # ← add this
+    "plaza":     scrape_plaza, 
+    "pararius":  scrape_pararius, # ← add this
 }
