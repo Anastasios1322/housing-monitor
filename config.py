@@ -86,6 +86,15 @@ CONFIG = {
             "filter_city": ["amsterdam"],
             
         },
+        
+        {
+            "name":             "Pararius+ Amsterdam",
+            "scraper":          "pararius",
+            "url":              "https://www.pararius.com/apartments/amsterdam/900-1200",
+            "enabled":          True,
+            "filter_city":      ["amsterdam"],
+            "interval_minutes": 4,
+        },
     ],
 }
 
