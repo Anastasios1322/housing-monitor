@@ -256,6 +256,7 @@ def scrape_plaza(site_cfg: dict) -> list:
 def scrape_pararius(site_cfg: dict) -> list: #start pararius +
     import os
     from bs4 import BeautifulSoup
+    from curl_cffi import requests as cffi
 
     time.sleep(random.uniform(1, 3))
     url      = site_cfg["url"]
@@ -273,7 +274,7 @@ def scrape_pararius(site_cfg: dict) -> list: #start pararius +
 
     try:
         log.info("  Fetching Pararius ...")
-        resp = requests.get(url, headers=headers, timeout=20)
+        resp = cffi.get(url, headers=headers, impersonate="chrome", timeout=20)
         resp.raise_for_status()
     except Exception as e:
         log.error(f"  Pararius request failed: {e}")
