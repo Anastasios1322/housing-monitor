@@ -261,6 +261,8 @@ def scrape_pararius(site_cfg: dict) -> list: #start pararius +
     time.sleep(random.uniform(1, 3))
     url      = site_cfg["url"]
     cookie   = os.environ.get("PARARIUS_COOKIE", "").replace("\r", "").replace("\n", "").strip()
+    proxy    = os.environ.get("PARARIUS_PROXY", "").strip()
+    proxies  = {"http": proxy, "https": proxy} if proxy else None
     listings = []
 
     headers = {
@@ -274,7 +276,7 @@ def scrape_pararius(site_cfg: dict) -> list: #start pararius +
 
     try:
         log.info("  Fetching Pararius ...")
-        resp = cffi.get(url, headers=headers, impersonate="chrome", timeout=20)
+        resp = cffi.get(url, headers=headers, impersonate="chrome", proxies=proxies, timeout=20)
         resp.raise_for_status()
     except Exception as e:
         log.error(f"  Pararius request failed: {e}")
