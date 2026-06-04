@@ -30,6 +30,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 STATE_FILE = Path("seen_listings.json")
+LAST_CHECKED = {}   # site name -> last check timestamp (per-site intervals)
 
 def load_seen() -> set:
     if STATE_FILE.exists():
@@ -132,6 +133,12 @@ def check_all_sites():
     for site_cfg in CONFIG["sites"]:
         if not site_cfg.get("enabled", True):
             continue
+            # Per-site interval: skip this site until its own interval has elapsed.
+        site_interval = site_cfg.get("interval_minutes", 1)
+        last = LAST_CHECKED.get(site_cfg["name"], 0)
+        if time.time() - last < site_interval * 60:
+            continue
+        LAST_CHECKED[site_cfg["name"]] = time.time()
         scraper_name = site_cfg["scraper"]
         scraper_fn   = SCRAPERS.get(scraper_name)
         if not scraper_fn:
