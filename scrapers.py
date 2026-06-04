@@ -274,8 +274,13 @@ def scrape_pararius(site_cfg: dict) -> list: #start pararius +
         "Cookie": cookie,
     }
 
-    try:
+   try:
         log.info("  Fetching Pararius ...")
+        try:
+            ip = cffi.get("https://api.ipify.org", proxies=proxies, impersonate="chrome", timeout=15).text
+            log.info(f"  Pararius outbound IP: {ip}  (proxy set: {bool(proxy)})")
+        except Exception as e:
+            log.error(f"  Proxy IP check failed: {e}")
         resp = cffi.get(url, headers=headers, impersonate="chrome", proxies=proxies, timeout=20)
         resp.raise_for_status()
     except Exception as e:
