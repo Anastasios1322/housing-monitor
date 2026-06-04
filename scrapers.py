@@ -259,7 +259,7 @@ def scrape_pararius(site_cfg: dict) -> list: #start pararius +
 
     time.sleep(random.uniform(1, 3))
     url      = site_cfg["url"]
-    cookie   = os.environ.get("PARARIUS_COOKIE", "")   # set in Railway, not in code
+    cookie   = os.environ.get("PARARIUS_COOKIE", "").replace("\r", "").replace("\n", "").strip()
     listings = []
 
     headers = {
