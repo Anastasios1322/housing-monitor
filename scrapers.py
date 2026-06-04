@@ -252,8 +252,7 @@ def scrape_plaza(site_cfg: dict) -> list:
         log.error(f"  Plaza API call failed: {e}")
  
     return listings
-    
-def scrape_pararius(site_cfg: dict) -> list: #start pararius +
+def scrape_pararius(site_cfg: dict) -> list:
     import os
     from bs4 import BeautifulSoup
     from curl_cffi import requests as cffi
@@ -266,15 +265,11 @@ def scrape_pararius(site_cfg: dict) -> list: #start pararius +
     listings = []
 
     headers = {
-        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                       "AppleWebKit/537.36 (KHTML, like Gecko) "
-                       "Chrome/124.0.0.0 Safari/537.36"),
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9,nl;q=0.8",
         "Cookie": cookie,
     }
 
-   try:
+    try:
         log.info("  Fetching Pararius ...")
         try:
             ip = cffi.get("https://api.ipify.org", proxies=proxies, impersonate="chrome", timeout=15).text
@@ -289,7 +284,7 @@ def scrape_pararius(site_cfg: dict) -> list: #start pararius +
 
     low = resp.text.lower()
     if any(m in low for m in ("just a moment", "checking your browser", "captcha")):
-        log.error("  Pararius returned a bot-challenge page (need fresh cookie / curl_cffi)")
+        log.error("  Pararius returned a bot-challenge page")
         return []
 
     soup  = BeautifulSoup(resp.text, "html.parser")
@@ -315,7 +310,7 @@ def scrape_pararius(site_cfg: dict) -> list: #start pararius +
         except Exception as e:
             log.debug(f"  Card parse error: {e}")
 
-    return listings
+    return listings    
     
 SCRAPERS = {
     "roommatch": scrape_roommatch,
